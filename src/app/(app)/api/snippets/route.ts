@@ -25,8 +25,14 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const rawLimit = searchParams.get("limit");
   const limit = rawLimit ? Math.min(Math.max(Number(rawLimit) || 20, 1), 50) : 20;
-  const snippets = await listPublic(limit);
-  return NextResponse.json({ snippets });
+  try {
+    const snippets = await listPublic(limit);
+    return NextResponse.json({ snippets });
+  } catch (e) {
+    const message =
+      e instanceof Error ? e.message : "Database unavailable";
+    return NextResponse.json({ error: message }, { status: 503 });
+  }
 }
 
 export async function POST(request: Request) {
