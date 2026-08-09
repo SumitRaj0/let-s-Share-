@@ -5,11 +5,11 @@ type RouteContext = { params: Promise<{ shareCode: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   const { shareCode } = await context.params;
-  const found = getByShareCode(shareCode);
+  const found = await getByShareCode(shareCode);
   if (!found) {
     return NextResponse.json({ error: "Snippet not found" }, { status: 404 });
   }
 
-  const snippet = incrementViews(found.id) ?? found;
+  const snippet = (await incrementViews(found.id)) ?? found;
   return NextResponse.json({ snippet });
 }

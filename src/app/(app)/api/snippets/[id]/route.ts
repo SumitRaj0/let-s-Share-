@@ -25,7 +25,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   const { id } = await context.params;
-  const snippet = getById(id);
+  const snippet = await getById(id);
   if (!snippet) {
     return NextResponse.json({ error: "Snippet not found" }, { status: 404 });
   }
@@ -96,7 +96,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     input.tags = raw.tags as string[];
   }
 
-  const snippet = updateSnippet(id, input);
+  const snippet = await updateSnippet(id, input);
   if (!snippet) {
     return NextResponse.json({ error: "Snippet not found" }, { status: 404 });
   }
@@ -106,7 +106,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   const { id } = await context.params;
-  const deleted = deleteSnippet(id);
+  const deleted = await deleteSnippet(id);
   if (!deleted) {
     return NextResponse.json({ error: "Snippet not found" }, { status: 404 });
   }

@@ -8,6 +8,6 @@ export async function GET() {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
-  const snippets = listByOwner(session.userId);
+  const snippets = await listByOwner(session.userId);
   return NextResponse.json({ snippets });
 }

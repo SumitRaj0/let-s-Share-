@@ -40,14 +40,14 @@ export async function POST(request: Request) {
     );
   }
 
-  if (emailExists(email)) {
+  if (await emailExists(email)) {
     return NextResponse.json(
       { error: "An account with this email already exists." },
       { status: 409 },
     );
   }
 
-  const user = createUser({
+  const user = await createUser({
     email,
     name,
     passwordHash: hashPassword(password),

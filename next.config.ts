@@ -57,7 +57,6 @@ if (enableHsts) {
 }
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["better-sqlite3"],
   poweredByHeader: false,
   compress: true,
   // Source maps help BP audits but inflate local tooling noise; keep off for leaner

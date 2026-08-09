@@ -1,44 +1,90 @@
 /**
- * SQLite client for Let'sShare.
- * Storage choice: better-sqlite3 (file at data/letsshare.sqlite).
- * Installed better-sqlite3@11 for Node 20 compatibility.
+ * Database client for Let'sShare.
+ *
+ * - Local/dev: libSQL file at `data/letsshare.sqlite`
+ * - Production (Vercel): Turso via TURSO_DATABASE_URL + TURSO_AUTH_TOKEN
+ *
+ * File SQLite cannot persist on Vercel serverless — cloud DB is required there.
  */
 
 import fs from "node:fs";
 import path from "node:path";
-import Database from "better-sqlite3";
+import { createClient, type Client, type InArgs } from "@libsql/client";
 import { migrate } from "./schema";
 
-export type Db = Database.Database;
+export type Db = Client;
 
 declare global {
   // eslint-disable-next-line no-var
   var __letsshare_db: Db | undefined;
+  // eslint-disable-next-line no-var
+  var __letsshare_db_migrated: boolean | undefined;
 }
 
-const DB_FILENAME = "letsshare.sqlite";
+function createDbClient(): Db {
+  const tursoUrl = process.env.TURSO_DATABASE_URL?.trim();
 
-function resolveDataDir(): string {
-  return path.join(process.cwd(), "data");
-}
-
-function resolveDbPath(): string {
-  return path.join(resolveDataDir(), DB_FILENAME);
-}
-
-export function getDb(): Db {
-  if (globalThis.__letsshare_db) {
-    return globalThis.__letsshare_db;
+  if (tursoUrl) {
+    return createClient({
+      url: tursoUrl,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
   }
 
-  const dataDir = resolveDataDir();
+  if (process.env.VERCEL) {
+    throw new Error(
+      "Share storage needs a cloud database on Vercel. Set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in project env vars.",
+    );
+  }
+
+  const dataDir = path.join(process.cwd(), "data");
   fs.mkdirSync(dataDir, { recursive: true });
+  const dbPath = path.join(dataDir, "letsshare.sqlite").replace(/\\/g, "/");
+  return createClient({ url: `file:${dbPath}` });
+}
 
-  const db = new Database(resolveDbPath());
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
-  migrate(db);
+export async function getDb(): Promise<Db> {
+  if (!globalThis.__letsshare_db) {
+    globalThis.__letsshare_db = createDbClient();
+  }
 
-  globalThis.__letsshare_db = db;
+  const db = globalThis.__letsshare_db;
+  if (!globalThis.__letsshare_db_migrated) {
+    await migrate(db);
+    globalThis.__letsshare_db_migrated = true;
+  }
   return db;
+}
+
+export async function dbGet<T extends Record<string, unknown>>(
+  sql: string,
+  args: InArgs = [],
+): Promise<T | undefined> {
+  const db = await getDb();
+  const result = await db.execute({ sql, args });
+  const row = result.rows[0];
+  return row ? (row as unknown as T) : undefined;
+}
+
+export async function dbAll<T extends Record<string, unknown>>(
+  sql: string,
+  args: InArgs = [],
+): Promise<T[]> {
+  const db = await getDb();
+  const result = await db.execute({ sql, args });
+  return result.rows as unknown as T[];
+}
+
+export async function dbRun(
+  sql: string,
+  args: InArgs = [],
+): Promise<{ changes: number }> {
+  const db = await getDb();
+  const result = await db.execute({ sql, args });
+  return { changes: Number(result.rowsAffected ?? 0) };
+}
+
+export async function dbExec(sql: string): Promise<void> {
+  const db = await getDb();
+  await db.executeMultiple(sql);
 }

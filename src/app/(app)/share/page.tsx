@@ -16,8 +16,8 @@ const LANGUAGE_LABELS: Record<SnippetLanguage, string> = {
   plaintext: "Plain text",
 };
 
-export default function ShareStartPage() {
-  const recent = listPublic(12);
+export default async function ShareStartPage() {
+  const recent = await listPublic(12);
 
   return (
     <>

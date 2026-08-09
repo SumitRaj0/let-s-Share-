@@ -11,7 +11,7 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const snippets = listByOwner(user.id);
+  const snippets = await listByOwner(user.id);
 
   return (
     <>

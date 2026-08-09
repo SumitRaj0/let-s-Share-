@@ -29,6 +29,6 @@ export async function GET(request: Request) {
     ? Math.min(Math.max(Number(rawLimit) || 24, 1), 50)
     : 24;
 
-  const snippets = listExplore({ q, tag, language, limit });
+  const snippets = await listExplore({ q, tag, language, limit });
   return NextResponse.json({ snippets });
 }

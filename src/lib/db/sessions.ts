@@ -1,6 +1,6 @@
 import type { AuthSession, User } from "@/lib/types";
 import { randomId } from "@/lib/store";
-import { getDb } from "./client";
+import { dbGet, dbRun } from "./client";
 
 type SessionRow = {
   token: string;
@@ -20,25 +20,18 @@ function rowToSession(row: SessionRow): AuthSession {
   };
 }
 
-export function createSessionRecord(
+export async function createSessionRecord(
   user: User,
   maxAgeSeconds: number,
-): AuthSession {
+): Promise<AuthSession> {
   const token = randomId("sess");
   const expiresAt = new Date(Date.now() + maxAgeSeconds * 1000).toISOString();
 
-  getDb()
-    .prepare(
-      `INSERT INTO sessions (token, user_id, email, name, expires_at)
-       VALUES (@token, @user_id, @email, @name, @expires_at)`,
-    )
-    .run({
-      token,
-      user_id: user.id,
-      email: user.email,
-      name: user.name,
-      expires_at: expiresAt,
-    });
+  await dbRun(
+    `INSERT INTO sessions (token, user_id, email, name, expires_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [token, user.id, user.email, user.name, expiresAt],
+  );
 
   return {
     token,
@@ -49,22 +42,23 @@ export function createSessionRecord(
   };
 }
 
-export function getSessionByToken(token: string): AuthSession | null {
-  const row = getDb()
-    .prepare(
-      `SELECT token, user_id, email, name, expires_at
-       FROM sessions WHERE token = ?`,
-    )
-    .get(token) as SessionRow | undefined;
+export async function getSessionByToken(
+  token: string,
+): Promise<AuthSession | null> {
+  const row = await dbGet<SessionRow>(
+    `SELECT token, user_id, email, name, expires_at
+     FROM sessions WHERE token = ?`,
+    [token],
+  );
   return row ? rowToSession(row) : null;
 }
 
-export function deleteSession(token: string): void {
-  getDb().prepare(`DELETE FROM sessions WHERE token = ?`).run(token);
+export async function deleteSession(token: string): Promise<void> {
+  await dbRun(`DELETE FROM sessions WHERE token = ?`, [token]);
 }
 
-export function deleteExpiredSessions(): void {
-  getDb()
-    .prepare(`DELETE FROM sessions WHERE expires_at <= ?`)
-    .run(new Date().toISOString());
+export async function deleteExpiredSessions(): Promise<void> {
+  await dbRun(`DELETE FROM sessions WHERE expires_at <= ?`, [
+    new Date().toISOString(),
+  ]);
 }

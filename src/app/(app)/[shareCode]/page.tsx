@@ -31,7 +31,7 @@ export default async function ShortShareEditorPage({
   const { shareCode } = await params;
   if (!isShareCodeFormat(shareCode)) notFound();
 
-  const found = getByShareCode(shareCode);
+  const found = await getByShareCode(shareCode);
   if (!found) notFound();
 
   return (

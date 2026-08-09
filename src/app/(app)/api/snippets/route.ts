@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const rawLimit = searchParams.get("limit");
   const limit = rawLimit ? Math.min(Math.max(Number(rawLimit) || 20, 1), 50) : 20;
-  const snippets = listPublic(limit);
+  const snippets = await listPublic(limit);
   return NextResponse.json({ snippets });
 }
 
@@ -129,7 +129,15 @@ export async function POST(request: Request) {
     tags,
   };
 
-  const snippet = createSnippet(input);
+  let snippet;
+  try {
+    snippet = await createSnippet(input);
+  } catch (e) {
+    const message =
+      e instanceof Error ? e.message : "Database unavailable";
+    return NextResponse.json({ error: message }, { status: 503 });
+  }
+
   const shareUrl = sharePath(snippet.shareCode);
 
   return NextResponse.json({ snippet, shareUrl }, { status: 201 });

@@ -1,5 +1,5 @@
 /**
- * Snippet helpers — delegates to durable SQLite store.
+ * Snippet helpers — delegates to durable store (libSQL / Turso).
  */
 
 import * as snippetsDb from "@/lib/db/snippets";
@@ -12,43 +12,54 @@ import type {
 
 export type { ListExploreOptions };
 
-export function createSnippet(input: CreateSnippetInput): ShareSnippet {
+export async function createSnippet(
+  input: CreateSnippetInput,
+): Promise<ShareSnippet> {
   return snippetsDb.createSnippet(input);
 }
 
-export function getById(id: string): ShareSnippet | null {
+export async function getById(id: string): Promise<ShareSnippet | null> {
   return snippetsDb.getById(id);
 }
 
-export function getByShareCode(shareCode: string): ShareSnippet | null {
+export async function getByShareCode(
+  shareCode: string,
+): Promise<ShareSnippet | null> {
   return snippetsDb.getByShareCode(shareCode);
 }
 
-export function updateSnippet(
+export async function updateSnippet(
   id: string,
   input: UpdateSnippetInput,
-): ShareSnippet | null {
+): Promise<ShareSnippet | null> {
   return snippetsDb.updateSnippet(id, input);
 }
 
-export function deleteSnippet(id: string): boolean {
+export async function deleteSnippet(id: string): Promise<boolean> {
   return snippetsDb.deleteSnippet(id);
 }
 
-export function listPublic(limit = 20): ShareSnippet[] {
+export async function listPublic(limit = 20): Promise<ShareSnippet[]> {
   return snippetsDb.listPublic(limit);
 }
 
-export function listExplore(options: ListExploreOptions = {}): ShareSnippet[] {
+export async function listExplore(
+  options: ListExploreOptions = {},
+): Promise<ShareSnippet[]> {
   return snippetsDb.listExplore(options);
 }
 
-export function listByOwner(ownerId: string): ShareSnippet[] {
+export async function listByOwner(ownerId: string): Promise<ShareSnippet[]> {
   return snippetsDb.listByOwner(ownerId);
 }
 
-export function incrementViews(id: string): ShareSnippet | null {
+export async function incrementViews(id: string): Promise<ShareSnippet | null> {
   return snippetsDb.incrementViews(id);
 }
 
-export { sharePath, isShareCodeFormat, absoluteShareUrl, normalizeShareCode } from "@/lib/share/codes";
+export {
+  sharePath,
+  isShareCodeFormat,
+  absoluteShareUrl,
+  normalizeShareCode,
+} from "@/lib/share/codes";

@@ -20,12 +20,12 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "shareCode required" }, { status: 400 });
   }
 
-  const snippet = getSnippetByShareCode(shareCode);
+  const snippet = await getSnippetByShareCode(shareCode);
   if (!snippet) {
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
 
-  const settings = getOrCreateByShareCode(shareCode);
+  const settings = await getOrCreateByShareCode(shareCode);
   if (!settings) {
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
@@ -39,7 +39,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "shareCode required" }, { status: 400 });
   }
 
-  const snippet = getSnippetByShareCode(shareCode);
+  const snippet = await getSnippetByShareCode(shareCode);
   if (!snippet) {
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
@@ -66,7 +66,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const raw = body as Record<string, unknown>;
 
   if (typeof raw.kickClientId === "string" && raw.kickClientId.trim()) {
-    const settings = kickClient(shareCode, raw.kickClientId.trim());
+    const settings = await kickClient(shareCode, raw.kickClientId.trim());
     if (!settings) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
@@ -111,7 +111,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  const settings = updateSettings(shareCode, patch);
+  const settings = await updateSettings(shareCode, patch);
   if (!settings) {
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }

@@ -1,6 +1,6 @@
 import type { User } from "@/lib/types";
 import { randomId } from "@/lib/store";
-import { getDb } from "./client";
+import { dbGet, dbRun } from "./client";
 
 export type UserRecord = User & { passwordHash: string };
 
@@ -31,59 +31,53 @@ function toPublicUser(record: UserRecord): User {
   };
 }
 
-export function createUser(input: {
+export async function createUser(input: {
   email: string;
   name: string;
   passwordHash: string;
-}): User {
+}): Promise<User> {
   const id = randomId("user");
   const createdAt = new Date().toISOString();
   const email = input.email.trim().toLowerCase();
 
-  getDb()
-    .prepare(
-      `INSERT INTO users (id, email, name, password_hash, created_at)
-       VALUES (@id, @email, @name, @password_hash, @created_at)`,
-    )
-    .run({
-      id,
-      email,
-      name: input.name,
-      password_hash: input.passwordHash,
-      created_at: createdAt,
-    });
+  await dbRun(
+    `INSERT INTO users (id, email, name, password_hash, created_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [id, email, input.name, input.passwordHash, createdAt],
+  );
 
   return { id, email, name: input.name, createdAt };
 }
 
-export function findUserByEmail(email: string): UserRecord | null {
-  const row = getDb()
-    .prepare(
-      `SELECT id, email, name, password_hash, created_at
-       FROM users WHERE email = ? COLLATE NOCASE`,
-    )
-    .get(email.trim().toLowerCase()) as UserRow | undefined;
+export async function findUserByEmail(
+  email: string,
+): Promise<UserRecord | null> {
+  const row = await dbGet<UserRow>(
+    `SELECT id, email, name, password_hash, created_at
+     FROM users WHERE email = ? COLLATE NOCASE`,
+    [email.trim().toLowerCase()],
+  );
   return row ? rowToRecord(row) : null;
 }
 
-export function findUserById(id: string): UserRecord | null {
-  const row = getDb()
-    .prepare(
-      `SELECT id, email, name, password_hash, created_at
-       FROM users WHERE id = ?`,
-    )
-    .get(id) as UserRow | undefined;
+export async function findUserById(id: string): Promise<UserRecord | null> {
+  const row = await dbGet<UserRow>(
+    `SELECT id, email, name, password_hash, created_at
+     FROM users WHERE id = ?`,
+    [id],
+  );
   return row ? rowToRecord(row) : null;
 }
 
-export function getPublicUserById(id: string): User | null {
-  const record = findUserById(id);
+export async function getPublicUserById(id: string): Promise<User | null> {
+  const record = await findUserById(id);
   return record ? toPublicUser(record) : null;
 }
 
-export function emailExists(email: string): boolean {
-  const row = getDb()
-    .prepare(`SELECT 1 AS ok FROM users WHERE email = ? COLLATE NOCASE`)
-    .get(email.trim().toLowerCase()) as { ok: number } | undefined;
+export async function emailExists(email: string): Promise<boolean> {
+  const row = await dbGet<{ ok: number }>(
+    `SELECT 1 AS ok FROM users WHERE email = ? COLLATE NOCASE`,
+    [email.trim().toLowerCase()],
+  );
   return Boolean(row);
 }

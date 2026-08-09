@@ -19,12 +19,12 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "shareCode required" }, { status: 400 });
   }
 
-  const snippet = getSnippetByShareCode(shareCode);
+  const snippet = await getSnippetByShareCode(shareCode);
   if (!snippet) {
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
 
-  const settings = getOrCreateByShareCode(shareCode);
+  const settings = await getOrCreateByShareCode(shareCode);
   if (!settings) {
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
@@ -42,7 +42,7 @@ export async function POST(request: Request, context: RouteContext) {
     // Empty / missing body is fine for guests
   }
 
-  if (clientId && isClientKicked(shareCode, clientId)) {
+  if (clientId && (await isClientKicked(shareCode, clientId))) {
     return NextResponse.json(
       { error: "You have been removed from this room" },
       { status: 403 },

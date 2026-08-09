@@ -32,7 +32,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
     ? languageRaw
     : "";
 
-  const snippets = listExplore({
+  const snippets = await listExplore({
     q: q || undefined,
     tag: tag || undefined,
     language: language || undefined,

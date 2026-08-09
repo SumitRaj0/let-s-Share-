@@ -10,7 +10,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export async function POST(_request: Request, context: RouteContext) {
   const { id } = await context.params;
-  const source = getById(id);
+  const source = await getById(id);
 
   if (!source) {
     return NextResponse.json({ error: "Snippet not found" }, { status: 404 });
@@ -39,7 +39,7 @@ export async function POST(_request: Request, context: RouteContext) {
     ? source.title
     : `Fork of ${source.title}`;
 
-  const snippet = createSnippet({
+  const snippet = await createSnippet({
     title: forkTitle,
     language: source.language,
     content: source.content,

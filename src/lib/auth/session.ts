@@ -22,10 +22,14 @@ function cookieOptions(maxAge?: number) {
 }
 
 export async function createSession(user: User): Promise<AuthSession> {
-  const session = createSessionRecord(user, SESSION_MAX_AGE_SECONDS);
+  const session = await createSessionRecord(user, SESSION_MAX_AGE_SECONDS);
 
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, session.token, cookieOptions(SESSION_MAX_AGE_SECONDS));
+  cookieStore.set(
+    SESSION_COOKIE,
+    session.token,
+    cookieOptions(SESSION_MAX_AGE_SECONDS),
+  );
 
   return session;
 }
@@ -35,11 +39,11 @@ export async function getSession(): Promise<AuthSession | null> {
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
-  const session = getSessionByToken(token);
+  const session = await getSessionByToken(token);
   if (!session) return null;
 
   if (new Date(session.expiresAt).getTime() <= Date.now()) {
-    deleteSession(token);
+    await deleteSession(token);
     cookieStore.delete(SESSION_COOKIE);
     return null;
   }
@@ -50,7 +54,7 @@ export async function getSession(): Promise<AuthSession | null> {
 export async function getSessionUser(): Promise<User | null> {
   const session = await getSession();
   if (!session) return null;
-  return getPublicUserById(session.userId);
+  return await getPublicUserById(session.userId);
 }
 
 export async function destroySession(): Promise<void> {
@@ -58,7 +62,7 @@ export async function destroySession(): Promise<void> {
   const token = cookieStore.get(SESSION_COOKIE)?.value;
 
   if (token) {
-    deleteSession(token);
+    await deleteSession(token);
   }
 
   cookieStore.set(SESSION_COOKIE, "", cookieOptions(0));

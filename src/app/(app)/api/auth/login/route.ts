@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const match = findUserByEmail(email);
+  const match = await findUserByEmail(email);
 
   if (!match || !verifyPassword(password, match.passwordHash)) {
     return NextResponse.json(

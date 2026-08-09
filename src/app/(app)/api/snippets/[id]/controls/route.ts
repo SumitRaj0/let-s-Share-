@@ -86,7 +86,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   try {
-    const snippet = updateSnippet(id, input);
+    const snippet = await updateSnippet(id, input);
     if (!snippet) {
       return NextResponse.json({ error: "Snippet not found" }, { status: 404 });
     }

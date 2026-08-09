@@ -1,13 +1,18 @@
-import type { Db } from "./client";
+import type { Client } from "@libsql/client";
 
 const SCHEMA_VERSION = 3;
 
-export function migrate(db: Db): void {
-  const row = db.pragma("user_version", { simple: true }) as number;
-  const current = typeof row === "number" ? row : 0;
+export async function migrate(db: Client): Promise<void> {
+  const versionResult = await db.execute("PRAGMA user_version");
+  const raw = versionResult.rows[0];
+  const current = Number(
+    (raw as { user_version?: number | bigint } | undefined)?.user_version ??
+      (Array.isArray(raw) ? raw[0] : 0) ??
+      0,
+  );
 
   if (current < 1) {
-    db.exec(`
+    await db.executeMultiple(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY NOT NULL,
         email TEXT NOT NULL UNIQUE COLLATE NOCASE,
@@ -49,11 +54,11 @@ export function migrate(db: Db): void {
       CREATE INDEX IF NOT EXISTS idx_snippets_is_public ON snippets(is_public);
       CREATE INDEX IF NOT EXISTS idx_snippets_created_at ON snippets(created_at);
     `);
-    db.pragma("user_version = 1");
+    await db.execute("PRAGMA user_version = 1");
   }
 
   if (current < 2) {
-    db.exec(`
+    await db.executeMultiple(`
       CREATE TABLE IF NOT EXISTS room_settings (
         share_code TEXT PRIMARY KEY NOT NULL COLLATE NOCASE,
         snippet_id TEXT NOT NULL,
@@ -67,14 +72,18 @@ export function migrate(db: Db): void {
       CREATE INDEX IF NOT EXISTS idx_room_settings_snippet_id
         ON room_settings(snippet_id);
     `);
-    db.pragma("user_version = 2");
+    await db.execute("PRAGMA user_version = 2");
   }
 
   if (current < 3) {
-    db.exec(`
-      ALTER TABLE snippets
-        ADD COLUMN tags TEXT NOT NULL DEFAULT '[]';
-    `);
-    db.pragma(`user_version = ${SCHEMA_VERSION}`);
+    try {
+      await db.execute(`
+        ALTER TABLE snippets
+          ADD COLUMN tags TEXT NOT NULL DEFAULT '[]';
+      `);
+    } catch {
+      // Column may already exist on reused DBs.
+    }
+    await db.execute(`PRAGMA user_version = ${SCHEMA_VERSION}`);
   }
 }
