@@ -30,12 +30,6 @@ function waitForProviderSynced(
   timeoutMs: number,
 ): Promise<void> {
   return new Promise((resolve) => {
-    // y-webrtc may already be synced when joining an existing room.
-    if (provider.synced) {
-      resolve();
-      return;
-    }
-
     let settled = false;
     const finish = () => {
       if (settled) return;
