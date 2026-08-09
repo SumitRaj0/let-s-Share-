@@ -20,6 +20,9 @@
 # production
 /build
 
+# local durable store (SQLite)
+/data
+
 # misc
 .DS_Store
 *.pem
@@ -39,3 +42,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local durable store
+/data
+
+# Lighthouse local reports
+lighthouse-*.json
+lh-*.json
+.lighthouseci/
+
+# Cursor / local agent tooling
+.cursor/

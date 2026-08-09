@@ -1,0 +1,316 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Snippet - Real-time Editor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-container": "#868587",
+                      "secondary": "#465f88",
+                      "on-primary-fixed": "#1b1b1d",
+                      "primary-fixed": "#e4e2e4",
+                      "secondary-fixed-dim": "#aec7f6",
+                      "on-background": "#1a1c1d",
+                      "surface-container-low": "#f3f3f5",
+                      "error-container": "#ffdad6",
+                      "surface-container-high": "#e8e8ea",
+                      "primary-fixed-dim": "#c8c6c8",
+                      "on-error": "#ffffff",
+                      "on-primary": "#ffffff",
+                      "surface-tint": "#5f5e60",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-fixed": "#ebe0de",
+                      "on-surface": "#1a1c1d",
+                      "on-tertiary-fixed": "#1f1a19",
+                      "on-secondary-fixed-variant": "#2d476f",
+                      "surface": "#f9f9fb",
+                      "tertiary-fixed-dim": "#cec4c2",
+                      "on-secondary-fixed": "#001b3d",
+                      "on-secondary-container": "#3f5881",
+                      "outline-variant": "#c7c6ca",
+                      "on-surface-variant": "#46464a",
+                      "surface-container-highest": "#e2e2e4",
+                      "inverse-surface": "#2f3132",
+                      "tertiary-container": "#211c1b",
+                      "inverse-on-surface": "#f0f0f2",
+                      "on-tertiary": "#ffffff",
+                      "primary": "#030304",
+                      "surface-container": "#eeeef0",
+                      "surface-bright": "#f9f9fb",
+                      "on-secondary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "inverse-primary": "#c8c6c8",
+                      "on-tertiary-fixed-variant": "#4c4544",
+                      "surface-variant": "#e2e2e4",
+                      "background": "#f9f9fb",
+                      "on-primary-fixed-variant": "#474649",
+                      "secondary-fixed": "#d6e3ff",
+                      "error": "#ba1a1a",
+                      "on-tertiary-container": "#8c8382",
+                      "primary-container": "#1d1d1f",
+                      "tertiary": "#040302",
+                      "surface-dim": "#d9dadc",
+                      "outline": "#77767b",
+                      "secondary-container": "#b6d0ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "80px",
+                      "section-gap": "160px",
+                      "gutter": "24px",
+                      "unit": "8px",
+                      "margin-mobile": "24px"
+              },
+              "fontFamily": {
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "display-lg-mobile": [
+                              "Inter"
+                      ],
+                      "caption": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "headline-xl": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "letterSpacing": "0",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "caption": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "letterSpacing": "0",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.25",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "80px",
+                              {
+                                      "lineHeight": "1.05",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "20px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "letterSpacing": "0",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 60px rgba(29, 29, 31, 0.05);
+        }
+        
+        /* Syntax Highlighting Mock */
+        .code-keyword { color: #5f5e60; font-weight: 600; }
+        .code-string { color: #465f88; }
+        .code-comment { color: #868587; font-style: italic; }
+        .code-function { color: #1a1c1d; }
+        
+        .code-editor-lines {
+            color: #c7c6ca;
+            user-select: none;
+            text-align: right;
+            padding-right: 16px;
+            border-right: 1px solid #e8e8ea;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="docked full-width top-0 sticky bg-surface/70 dark:bg-surface-container-highest/70 backdrop-blur-xl border-b border-white/10 shadow-sm dark:shadow-none z-50">
+<div class="flex justify-between items-center w-full px-margin-desktop py-gutter max-w-full mx-auto z-50">
+<div class="flex items-center gap-8">
+<a class="text-headline-lg font-headline-lg font-black tracking-tighter text-primary dark:text-primary-fixed" href="#">LetsShare</a>
+<nav class="hidden md:flex gap-6 items-center">
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary dark:border-primary-fixed pb-1 hover:scale-[1.02] transition-transform duration-300 ease-out" href="#">Features</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-medium hover:scale-[1.02] transition-transform duration-300 ease-out" href="#">About</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden md:block text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors">Login</button>
+<button class="bg-primary text-on-primary px-6 py-3 rounded-full text-label-md font-label-md hover:scale-[1.02] transition-transform duration-300 ease-out shadow-lg">Start sharing</button>
+</div>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="flex-grow flex flex-col md:flex-row px-margin-mobile md:px-margin-desktop py-gutter gap-gutter h-[calc(100vh-80px)]">
+<!-- Editor Section -->
+<section class="flex-grow flex flex-col glass-panel rounded-xl overflow-hidden relative group">
+<!-- Editor Header -->
+<div class="flex justify-between items-center px-6 py-4 border-b border-surface-container-high bg-surface-container-low/50">
+<div class="flex items-center gap-4">
+<span class="text-label-md font-label-md text-on-surface font-semibold">index.js</span>
+<span class="text-caption font-caption text-on-surface-variant">Saved just now</span>
+</div>
+<div class="flex items-center gap-4">
+<!-- Collaboration Avatars -->
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-white bg-primary-container text-on-primary-container flex items-center justify-center text-caption font-caption font-bold z-20" title="Alex">A</div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-secondary-container text-on-secondary-container flex items-center justify-center text-caption font-caption font-bold z-10" title="Sarah">S</div>
+</div>
+<!-- Share Link -->
+<div class="flex items-center bg-surface-container-high rounded-full px-3 py-1.5 gap-2">
+<span class="text-caption font-caption text-on-surface-variant truncate w-32">snippet.io/r/a3x9f...</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors" title="Copy Link">
+<span class="material-symbols-outlined text-[16px]" data-icon="content_copy">content_copy</span>
+</button>
+</div>
+<!-- Run Button -->
+<button class="bg-primary text-on-primary px-4 py-2 rounded-full text-label-md font-label-md flex items-center gap-2 hover:scale-[1.02] transition-transform shadow-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="play_arrow">play_arrow</span>
+                        Run
+                    </button>
+</div>
+</div>
+<!-- Code Area -->
+<div class="flex-grow flex overflow-auto bg-white">
+<!-- Line Numbers -->
+<div class="code-editor-lines py-6 px-4 font-mono text-caption min-w-[48px] bg-surface-container-lowest">
+                    1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15
+                </div>
+<!-- Code Content -->
+<pre class="flex-grow py-6 px-4 font-mono text-body-md overflow-x-auto whitespace-pre"><span class="code-comment">// Initialize the main application loop</span>
+<span class="code-keyword">import</span> { <span class="code-function">Engine</span>, <span class="code-function">RenderPipeline</span> } <span class="code-keyword">from</span> <span class="code-string">'@snippet/core'</span>;
+
+<span class="code-keyword">const</span> config = {
+    resolution: <span class="code-string">'4k'</span>,
+    fpsTarget: 60,
+    antiAliasing: <span class="code-keyword">true</span>
+};
+
+<span class="code-keyword">function</span> <span class="code-function">startApp</span>() {
+    <span class="code-keyword">const</span> engine = <span class="code-keyword">new</span> <span class="code-function">Engine</span>(config);
+    
+    engine.on(<span class="code-string">'ready'</span>, () =&gt; {
+        console.log(<span class="code-string">'System online. Ready for input.'</span>);
+        <span class="code-function">RenderPipeline</span>.start();
+    });
+}
+
+<span class="code-function">startApp</span>();
+                </pre>
+</div>
+</section>
+<!-- Right Side Panel (Console/Details) -->
+<aside class="w-full md:w-96 flex flex-col gap-gutter">
+<!-- Output Console -->
+<div class="flex-grow glass-panel rounded-xl flex flex-col overflow-hidden">
+<div class="px-6 py-4 border-b border-surface-container-high bg-surface-container-low/50 flex justify-between items-center">
+<span class="text-label-md font-label-md text-on-surface font-semibold">Console Output</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="delete_sweep">delete_sweep</span>
+</button>
+</div>
+<div class="flex-grow p-6 font-mono text-caption text-on-surface-variant overflow-y-auto bg-surface-container-lowest">
+                    &gt; System initializing...<br>
+                    &gt; Loading core modules... [OK]<br>
+                    &gt; Connecting to collaboration server... [OK]<br>
+                    &gt; <span class="text-primary font-medium">System online. Ready for input.</span><br>
+<span class="animate-pulse">_</span>
+</div>
+</div>
+<!-- Context Info -->
+<div class="h-48 glass-panel rounded-xl p-6 flex flex-col justify-between">
+<div>
+<h3 class="text-label-md font-label-md text-on-surface font-semibold mb-2">Environment</h3>
+<p class="text-caption font-caption text-on-surface-variant">Node.js v18.16.0 <br> Memory Usage: 42MB</p>
+</div>
+<div class="flex justify-between items-end">
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-caption font-caption text-on-surface">ES6</span>
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-caption font-caption text-on-surface">Strict</span>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="settings">settings</span>
+</div>
+</div>
+</aside>
+</main>
+<!-- Footer -->
+<footer class="full-width bottom-0 bg-surface dark:bg-background mt-section-gap flex flex-col md:flex-row justify-between items-center w-full px-margin-desktop py-gutter border-t border-surface-container-high dark:border-outline-variant">
+<div class="text-label-md font-label-md font-bold text-primary dark:text-primary-fixed mb-4 md:mb-0">© 2024 LetsShare Industrial. All rights reserved.</div>
+<div class="flex gap-6">
+<a class="text-label-md font-label-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Privacy</a>
+<a class="text-label-md font-label-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Terms</a>
+<a class="text-label-md font-label-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Github</a>
+</div>
+</footer>
+
+
+</body></html>

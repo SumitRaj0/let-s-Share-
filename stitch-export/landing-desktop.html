@@ -1,0 +1,184 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Snippet - Sharing, made instant.</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-container": "#868587",
+                        "secondary": "#465f88",
+                        "on-primary-fixed": "#1b1b1d",
+                        "primary-fixed": "#e4e2e4",
+                        "secondary-fixed-dim": "#aec7f6",
+                        "on-background": "#1a1c1d",
+                        "surface-container-low": "#f3f3f5",
+                        "error-container": "#ffdad6",
+                        "surface-container-high": "#e8e8ea",
+                        "primary-fixed-dim": "#c8c6c8",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#5f5e60",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#ebe0de",
+                        "on-surface": "#1a1c1d",
+                        "on-tertiary-fixed": "#1f1a19",
+                        "on-secondary-fixed-variant": "#2d476f",
+                        "surface": "#f9f9fb",
+                        "tertiary-fixed-dim": "#cec4c2",
+                        "on-secondary-fixed": "#001b3d",
+                        "on-secondary-container": "#3f5881",
+                        "outline-variant": "#c7c6ca",
+                        "on-surface-variant": "#46464a",
+                        "surface-container-highest": "#e2e2e4",
+                        "inverse-surface": "#2f3132",
+                        "tertiary-container": "#211c1b",
+                        "inverse-on-surface": "#f0f0f2",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#030304",
+                        "surface-container": "#eeeef0",
+                        "surface-bright": "#f9f9fb",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#c8c6c8",
+                        "on-tertiary-fixed-variant": "#4c4544",
+                        "surface-variant": "#e2e2e4",
+                        "background": "#f9f9fb",
+                        "on-primary-fixed-variant": "#474649",
+                        "secondary-fixed": "#d6e3ff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-container": "#8c8382",
+                        "primary-container": "#1d1d1f",
+                        "tertiary": "#040302",
+                        "surface-dim": "#d9dadc",
+                        "outline": "#77767b",
+                        "secondary-container": "#b6d0ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "80px",
+                        "section-gap": "160px",
+                        "gutter": "24px",
+                        "unit": "8px",
+                        "margin-mobile": "24px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "caption": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }],
+                        "display-lg-mobile": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "caption": ["12px", { "lineHeight": "1.4", "letterSpacing": "0", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.25", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "display-lg": ["80px", { "lineHeight": "1.05", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-xl": ["48px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["20px", { "lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 30px 60px rgba(29, 29, 31, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary">
+<!-- TopNavBar -->
+<header class="bg-surface/70 dark:bg-surface-container-highest/70 backdrop-blur-xl border-b border-white/10 shadow-sm dark:shadow-none w-full top-0 sticky z-50">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-gutter max-w-full mx-auto z-50">
+<!-- Brand -->
+<a class="text-headline-lg font-headline-lg font-black tracking-tighter text-primary dark:text-primary-fixed hover:scale-[1.02] transition-transform duration-300 ease-out active:scale-95" href="#">LetsShare</a>
+<!-- Navigation -->
+<nav class="hidden md:flex items-center gap-gutter">
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary dark:border-primary-fixed pb-1 hover:scale-[1.02] transition-transform duration-300 ease-out active:scale-95" href="#">Features</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-medium hover:scale-[1.02] transition-transform duration-300 ease-out active:scale-95" href="#">About</a>
+</nav>
+<!-- Actions -->
+<div class="flex items-center gap-unit">
+<a class="hidden md:inline-flex text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors duration-200 hover:scale-[1.02] active:scale-95" href="#">Login</a>
+<a class="inline-flex items-center justify-center bg-primary-container text-on-primary px-6 py-3 rounded-full text-label-md font-label-md hover:scale-[1.02] transition-transform duration-300 ease-out active:scale-95 shadow-[0_4px_14px_0_rgba(29,29,31,0.1)]" href="#">
+                    Start sharing
+                </a>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow flex flex-col items-center">
+<!-- Hero Section -->
+<section class="w-full px-margin-mobile md:px-margin-desktop pt-[120px] pb-section-gap flex flex-col items-center text-center max-w-[1200px] mx-auto">
+<h1 class="text-display-lg-mobile font-display-lg-mobile md:text-display-lg md:font-display-lg text-primary mb-gutter tracking-tight max-w-[800px]">
+                Sharing, made instant.
+            </h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant mb-[48px] max-w-[600px]">Starting with code. More ways to share, coming soon.</p>
+<a class="inline-flex items-center justify-center bg-primary-container text-on-primary px-8 py-4 rounded-full text-label-md font-label-md hover:scale-[1.02] transition-transform duration-300 ease-out shadow-[0_8px_30px_rgba(29,29,31,0.12)] active:scale-95" href="#">
+                Start sharing
+            </a>
+</section>
+<!-- Product Showcase -->
+<section class="w-full px-margin-mobile md:px-margin-desktop pb-section-gap max-w-[1400px] mx-auto">
+<div class="glass-panel rounded-[24px] w-full aspect-video relative overflow-hidden flex items-center justify-center">
+<!-- Abstract Representation of Editor -->
+<div class="w-full h-full p-8 flex flex-col bg-surface-container-low/50">
+<!-- Fake Window Header -->
+<div class="flex items-center gap-2 mb-6 border-b border-outline-variant/30 pb-4">
+<div class="w-3 h-3 rounded-full bg-outline-variant"></div>
+<div class="w-3 h-3 rounded-full bg-outline-variant"></div>
+<div class="w-3 h-3 rounded-full bg-outline-variant"></div>
+<div class="ml-4 h-4 w-32 bg-surface-variant rounded"></div>
+</div>
+<!-- Fake Code Lines -->
+<div class="space-y-3 pl-4 border-l-2 border-primary-fixed">
+<div class="h-4 w-3/4 bg-surface-variant rounded animate-pulse"></div>
+<div class="h-4 w-1/2 bg-surface-variant rounded animate-pulse" style="animation-delay: 100ms;"></div>
+<div class="h-4 w-5/6 bg-primary-container/20 rounded animate-pulse" style="animation-delay: 200ms;"></div>
+<div class="h-4 w-1/3 bg-surface-variant rounded animate-pulse" style="animation-delay: 300ms;"></div>
+<div class="h-4 w-2/3 bg-surface-variant rounded animate-pulse" style="animation-delay: 400ms;"></div>
+</div>
+</div>
+<!-- Floating Element 1 -->
+<div class="absolute -right-8 -top-8 w-64 h-64 bg-secondary-container/20 rounded-full blur-3xl pointer-events-none"></div>
+<!-- Floating Element 2 -->
+<div class="absolute -left-12 -bottom-12 w-80 h-80 bg-primary-container/5 rounded-full blur-3xl pointer-events-none"></div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface dark:bg-background mt-section-gap w-full border-t border-surface-container-high dark:border-outline-variant">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-gutter max-w-full mx-auto">
+<div class="text-label-md font-label-md font-bold text-primary dark:text-primary-fixed mb-4 md:mb-0">LetsShare</div>
+<nav class="flex gap-gutter mb-4 md:mb-0">
+<a class="text-label-md font-label-md text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Privacy</a>
+<a class="text-label-md font-label-md text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Terms</a>
+<a class="text-label-md font-label-md text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Github</a>
+</nav>
+<div class="text-caption font-caption text-secondary dark:text-secondary-fixed-dim">© 2024 LetsShare Industrial. All rights reserved.</div>
+</div>
+</footer>
+
+
+</body></html>

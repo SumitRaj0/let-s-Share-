@@ -1,0 +1,20 @@
+# Let'sShare
+> Let'sShare is a realtime code sharing platform for developers: create shareable snippet links, collaborate in a live editor, and run code side by side.
+
+Let'sShare helps individuals and teams share code instantly without setup friction. Core capabilities include share links, realtime collaborative editing, an in-browser editor, explore and discovery of public snippets, and account features for managing shares.
+
+## Product
+- [Home](/): Product overview and entry point
+- [Share](/share): Create a new shareable code snippet
+- [Explore](/explore): Browse public snippets
+- [Editor](/editor): Realtime collaborative code editor
+- [Login](/login): Sign in to manage your shares
+- [Sign up](/signup): Create a Let'sShare account
+
+## Policies
+- [Privacy](/privacy): Privacy policy
+- [Terms](/terms): Terms of use
+
+## Optional
+- [Sitemap](/sitemap.xml): Machine-readable list of public pages
+- [Robots](/robots.txt): Crawler access rules
