@@ -2,14 +2,36 @@ import type { Client } from "@libsql/client";
 
 const SCHEMA_VERSION = 3;
 
-export async function migrate(db: Client): Promise<void> {
-  const versionResult = await db.execute("PRAGMA user_version");
-  const raw = versionResult.rows[0];
-  const current = Number(
-    (raw as { user_version?: number | bigint } | undefined)?.user_version ??
-      (Array.isArray(raw) ? raw[0] : 0) ??
-      0,
+/**
+ * Turso remote rejects `PRAGMA user_version = N` (HTTP 400), so version is
+ * stored in a normal table instead of SQLite's user_version pragma.
+ */
+async function getSchemaVersion(db: Client): Promise<number> {
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS schema_meta (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      version INTEGER NOT NULL
+    )
+  `);
+  const result = await db.execute(
+    "SELECT version FROM schema_meta WHERE id = 1",
   );
+  const row = result.rows[0] as { version?: number | bigint } | undefined;
+  return Number(row?.version ?? 0);
+}
+
+async function setSchemaVersion(db: Client, version: number): Promise<void> {
+  await db.execute({
+    sql: `
+      INSERT INTO schema_meta (id, version) VALUES (1, ?)
+      ON CONFLICT(id) DO UPDATE SET version = excluded.version
+    `,
+    args: [version],
+  });
+}
+
+export async function migrate(db: Client): Promise<void> {
+  const current = await getSchemaVersion(db);
 
   if (current < 1) {
     await db.executeMultiple(`
@@ -54,10 +76,10 @@ export async function migrate(db: Client): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_snippets_is_public ON snippets(is_public);
       CREATE INDEX IF NOT EXISTS idx_snippets_created_at ON snippets(created_at);
     `);
-    await db.execute("PRAGMA user_version = 1");
+    await setSchemaVersion(db, 1);
   }
 
-  if (current < 2) {
+  if ((await getSchemaVersion(db)) < 2) {
     await db.executeMultiple(`
       CREATE TABLE IF NOT EXISTS room_settings (
         share_code TEXT PRIMARY KEY NOT NULL COLLATE NOCASE,
@@ -72,10 +94,10 @@ export async function migrate(db: Client): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_room_settings_snippet_id
         ON room_settings(snippet_id);
     `);
-    await db.execute("PRAGMA user_version = 2");
+    await setSchemaVersion(db, 2);
   }
 
-  if (current < 3) {
+  if ((await getSchemaVersion(db)) < 3) {
     try {
       await db.execute(`
         ALTER TABLE snippets
@@ -84,6 +106,6 @@ export async function migrate(db: Client): Promise<void> {
     } catch {
       // Column may already exist on reused DBs.
     }
-    await db.execute(`PRAGMA user_version = ${SCHEMA_VERSION}`);
+    await setSchemaVersion(db, SCHEMA_VERSION);
   }
 }

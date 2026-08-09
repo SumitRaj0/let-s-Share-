@@ -59,6 +59,8 @@ if (enableHsts) {
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
+  // Keep libSQL out of the serverless bundle graph where possible.
+  serverExternalPackages: ["@libsql/client", "@libsql/client/web"],
   // Source maps help BP audits but inflate local tooling noise; keep off for leaner
   // homepage Lighthouse runs. Enable in CI/prod debugging if needed.
   productionBrowserSourceMaps: false,
