@@ -5,6 +5,8 @@ import { Header } from "@/components/Header";
 import { getSessionUser } from "@/lib/auth/session";
 import { listByOwner } from "@/lib/share/snippets";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const user = await getSessionUser();
   if (!user) {

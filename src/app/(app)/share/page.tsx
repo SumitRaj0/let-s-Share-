@@ -5,6 +5,9 @@ import { CreateSharePanel } from "@/components/share/CreateSharePanel";
 import { listPublic } from "@/lib/share/snippets";
 import type { SnippetLanguage } from "@/lib/types";
 
+/** Hits Turso at request time — do not prerender during `next build`. */
+export const dynamic = "force-dynamic";
+
 const LANGUAGE_LABELS: Record<SnippetLanguage, string> = {
   javascript: "JavaScript",
   typescript: "TypeScript",

@@ -4,6 +4,8 @@ import { ExploreGrid } from "@/components/explore/ExploreGrid";
 import { listExplore } from "@/lib/share/snippets";
 import type { SnippetLanguage } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 const LANGUAGES: SnippetLanguage[] = [
   "javascript",
   "typescript",
