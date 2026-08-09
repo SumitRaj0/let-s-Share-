@@ -27,7 +27,7 @@ function drawSoftSphere(
   ctx.fill();
 
   // Sphere body — matte studio lighting (no harsh specular)
-  const base =
+  const base: [number, string][] =
     tone === "dark"
       ? [
           [0, "rgb(52, 54, 58)"],
@@ -49,7 +49,7 @@ function drawSoftSphere(
     radius,
   );
   for (const [stop, color] of base) {
-    body.addColorStop(Number(stop), color);
+    body.addColorStop(stop, color);
   }
   ctx.fillStyle = body;
   ctx.beginPath();
