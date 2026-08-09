@@ -24,7 +24,7 @@ import { EditorSettingsPanel } from "@/components/editor/EditorSettingsPanel";
 import { SnippetLoadErrorDialog } from "@/components/editor/SnippetLoadErrorDialog";
 import { ShareLinkBar } from "@/components/share/ShareLinkBar";
 import { starterFor } from "@/lib/snippets/starters";
-import type { SnippetLanguage } from "@/lib/types";
+import type { ShareSnippet, SnippetLanguage } from "@/lib/types";
 
 const MonacoCodeEditor = dynamic(
   () =>
@@ -48,10 +48,12 @@ const PERSIST_DEBOUNCE_MS = 2000;
  */
 export function CodeWorkspace({
   initialShareCode,
+  initialSnippet = null,
 }: {
   initialShareCode?: string;
+  initialSnippet?: ShareSnippet | null;
 } = {}) {
-  const session = useSnippetSession(initialShareCode);
+  const session = useSnippetSession(initialShareCode, initialSnippet);
   const { user, loading: authLoading, logout } = useAuth();
   const room = useRoomRole(session.shareCode);
   const [saving, setSaving] = useState(false);
@@ -510,26 +512,25 @@ export function CodeWorkspace({
             flexBasis: 0,
           }}
         >
-          {session.status === "loading" ||
-          (collabEnabled && !collab.ready) ? (
+          {session.status === "loading" ? (
             <div className="flex flex-1 items-center justify-center text-[15px] text-[#858585]">
-              {session.status === "loading"
-                ? "Loading shared snippet…"
-                : "Connecting live session…"}
+              Loading shared snippet…
             </div>
           ) : (
             <MonacoCodeEditor
               key={
-                collabEnabled
-                  ? `collab-${session.shareCode}`
+                session.shareCode
+                  ? `share-${session.shareCode}-${collab.ready ? "live" : "boot"}`
                   : "local-editor"
               }
               language={session.language}
               value={session.content}
               onChange={handleEditorChange}
               readOnly={readOnly}
-              collaborative={collabEnabled}
-              onEditorMount={collabEnabled ? handleEditorMount : undefined}
+              collaborative={collabEnabled && collab.ready}
+              onEditorMount={
+                collabEnabled && collab.ready ? handleEditorMount : undefined
+              }
               onBlur={
                 canPersist
                   ? () => {

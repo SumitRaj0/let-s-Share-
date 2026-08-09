@@ -24,6 +24,7 @@ function EditorFallback() {
 
 /**
  * Short share URL — `/{code}` opens the live editor (e.g. /0845).
+ * Snippet is loaded on the server so the client can paint without a second fetch.
  */
 export default async function ShortShareEditorPage({
   params,
@@ -37,7 +38,10 @@ export default async function ShortShareEditorPage({
   return (
     <div className="flex min-h-dvh flex-col bg-[#1e1e1e]">
       <Suspense fallback={<EditorFallback />}>
-        <CodeWorkspace initialShareCode={found.shareCode} />
+        <CodeWorkspace
+          initialShareCode={found.shareCode}
+          initialSnippet={found}
+        />
       </Suspense>
     </div>
   );

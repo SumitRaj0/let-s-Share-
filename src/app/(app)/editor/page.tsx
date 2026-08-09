@@ -1,28 +1,18 @@
-import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { CodeWorkspace } from "@/components/editor/CodeWorkspace";
+import { getSessionUser } from "@/lib/auth/session";
 import { isShareCodeFormat, sharePath } from "@/lib/share/codes";
+import { createSnippet } from "@/lib/share/snippets";
+import { starterFor } from "@/lib/snippets/starters";
 
 type EditorPageProps = {
   searchParams: Promise<{ code?: string }>;
 };
 
-function EditorFallback() {
-  return (
-    <main className="flex min-h-0 grow flex-col bg-[#1e1e1e]">
-      <div className="flex h-12 shrink-0 items-center border-b border-[#2f2f2f] bg-[#252526] px-4">
-        <span className="font-display text-[15px] font-bold text-[#e8e8e8]">
-          Let&apos;sShare
-        </span>
-      </div>
-      <div className="flex flex-1 items-center justify-center text-[15px] text-[#858585]">
-        Loading editor…
-      </div>
-    </main>
-  );
-}
-
-/** Blank editor at `/editor`. Legacy `?code=` redirects to short `/{code}`. */
+/**
+ * `/editor` always lands on a short share URL `/{code}`.
+ * - `?code=` → redirect to that share
+ * - bare `/editor` (Start sharing) → create a new share, then redirect
+ */
 export default async function EditorPage({ searchParams }: EditorPageProps) {
   const sp = await searchParams;
   const code = typeof sp.code === "string" ? sp.code.trim() : "";
@@ -30,11 +20,15 @@ export default async function EditorPage({ searchParams }: EditorPageProps) {
     redirect(sharePath(code));
   }
 
-  return (
-    <div className="flex min-h-dvh flex-col bg-[#1e1e1e]">
-      <Suspense fallback={<EditorFallback />}>
-        <CodeWorkspace />
-      </Suspense>
-    </div>
-  );
+  const user = await getSessionUser();
+  const snippet = await createSnippet({
+    title: "Untitled snippet",
+    language: "javascript",
+    content: starterFor("javascript"),
+    isPublic: true,
+    ownerId: user?.id ?? null,
+    ownerName: user?.name ?? null,
+  });
+
+  redirect(sharePath(snippet.shareCode));
 }

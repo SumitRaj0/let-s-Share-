@@ -1,6 +1,6 @@
 "use client";
 
-import type * as Y from "yjs";
+import * as Y from "yjs";
 import type { CollabPeer } from "@/lib/collab/types";
 
 export type HttpSyncPeer = {
@@ -39,7 +39,7 @@ function base64ToBytes(value: string): Uint8Array {
 
 /**
  * Server-mediated Yjs sync (works across devices / networks).
- * Public WebRTC signaling is unreliable — this is the primary interconnect.
+ * Tuned for low typing latency: short debounce + frequent pull.
  */
 export function startHttpYjsSync(options: HttpSyncOptions): () => void {
   const {
@@ -47,8 +47,8 @@ export function startHttpYjsSync(options: HttpSyncOptions): () => void {
     doc,
     peer,
     onPeers,
-    pushMs = 180,
-    pullMs = 450,
+    pushMs = 45,
+    pullMs = 120,
   } = options;
 
   const endpoint = `/api/rooms/${encodeURIComponent(shareCode)}/collab`;
@@ -58,15 +58,17 @@ export function startHttpYjsSync(options: HttpSyncOptions): () => void {
   let lastPushed = "";
   let pushTimer: number | null = null;
   let pullTimer: number | null = null;
-  let inFlight = false;
+  let pushInFlight = false;
+  let pullInFlight = false;
+  let pushQueued = false;
 
   const notifyPeers = (peers: CollabPeer[]) => {
     onPeers?.(peers.filter((p) => p.id !== peer.id));
   };
 
   const pull = async () => {
-    if (disposed || inFlight) return;
-    inFlight = true;
+    if (disposed || pullInFlight) return;
+    pullInFlight = true;
     try {
       const res = await fetch(endpoint, { method: "GET", cache: "no-store" });
       if (!res.ok) return;
@@ -82,7 +84,6 @@ export function startHttpYjsSync(options: HttpSyncOptions): () => void {
 
       applyingRemote = true;
       try {
-        const Y = await import("yjs");
         Y.applyUpdate(doc, base64ToBytes(remote), "http-sync");
         lastApplied = remote;
       } finally {
@@ -91,15 +92,19 @@ export function startHttpYjsSync(options: HttpSyncOptions): () => void {
     } catch {
       // transient network — next poll retries
     } finally {
-      inFlight = false;
+      pullInFlight = false;
     }
   };
 
   const push = async () => {
     if (disposed || applyingRemote) return;
-    inFlight = true;
+    if (pushInFlight) {
+      pushQueued = true;
+      return;
+    }
+    pushInFlight = true;
+    pushQueued = false;
     try {
-      const Y = await import("yjs");
       const state = bytesToBase64(Y.encodeStateAsUpdate(doc));
       const res = await fetch(endpoint, {
         method: "PUT",
@@ -128,7 +133,11 @@ export function startHttpYjsSync(options: HttpSyncOptions): () => void {
     } catch {
       // retry on next local change / pull
     } finally {
-      inFlight = false;
+      pushInFlight = false;
+      if (pushQueued && !disposed) {
+        pushQueued = false;
+        void push();
+      }
     }
   };
 
@@ -148,14 +157,12 @@ export function startHttpYjsSync(options: HttpSyncOptions): () => void {
 
   doc.on("update", onUpdate);
 
-  // Initial push (seed) + heartbeat presence even without edits.
   void push();
   pullTimer = window.setInterval(() => {
     void pull();
   }, pullMs);
 
   const presenceTimer = window.setInterval(() => {
-    // Heartbeat peer without re-encoding when idle.
     void fetch(endpoint, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -167,7 +174,7 @@ export function startHttpYjsSync(options: HttpSyncOptions): () => void {
         if (Array.isArray(data.peers)) notifyPeers(data.peers);
       })
       .catch(() => {});
-  }, 4000);
+  }, 5000);
 
   return () => {
     disposed = true;

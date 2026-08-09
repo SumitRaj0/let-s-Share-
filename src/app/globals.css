@@ -274,7 +274,7 @@ body {
 @keyframes marketing-rise {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(28px);
   }
   to {
     opacity: 1;
@@ -285,56 +285,68 @@ body {
 @keyframes marketing-preview-in {
   from {
     opacity: 0;
-    transform: perspective(1400px) rotateX(8deg) translateY(28px) scale(0.98);
+    transform: translateY(40px) scale(0.97);
   }
   to {
     opacity: 1;
-    transform: perspective(1400px) rotateX(4deg) translateY(0) scale(1);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes marketing-feature-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .marketing-rise {
-    animation: marketing-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: marketing-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .marketing-rise-delay {
-    animation: marketing-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+    animation: marketing-rise 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
   }
 
   .marketing-rise-delay-2 {
-    animation: marketing-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
+    animation: marketing-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both;
   }
 
-  .marketing-preview-motion {
-    transform-origin: center top;
-    animation: marketing-preview-in 0.95s cubic-bezier(0.22, 1, 0.36, 1) 0.2s
-      both;
-    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  .marketing-preview-in {
+    animation: marketing-preview-in 1s cubic-bezier(0.22, 1, 0.36, 1) 0.28s both;
   }
 
-  .marketing-preview-motion:hover {
-    transform: perspective(1400px) rotateX(0deg) translateY(-4px) scale(1.01);
+  .marketing-feature-rise {
+    animation: marketing-feature-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1)
+      var(--feature-delay, 0.1s) both;
   }
 
   .marketing-cta {
     transition:
       background-color 0.2s ease,
-      transform 0.2s ease,
       opacity 0.2s ease;
   }
 
   .marketing-cta:hover {
-    opacity: 0.92;
-  }
-
-  .marketing-cta:active {
-    transform: scale(0.985);
+    opacity: 0.94;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marketing-preview-motion {
-    transform: none;
+  .marketing-rise,
+  .marketing-rise-delay,
+  .marketing-rise-delay-2,
+  .marketing-preview-in,
+  .marketing-feature-rise {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
+
+

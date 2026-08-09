@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type * as Y from "yjs";
+import * as Y from "yjs";
 import type { WebrtcProvider } from "y-webrtc";
 import type { Awareness } from "y-protocols/awareness";
 import type { editor as MonacoEditorNS } from "monaco-editor";
@@ -13,8 +13,14 @@ import {
 import { startHttpYjsSync } from "@/lib/collab/http-sync";
 import type { CollabPeer } from "@/lib/collab/types";
 
-/** Wait briefly for WebRTC/BroadcastChannel before seeding from API. */
-const SYNC_WAIT_MS = 500;
+function base64ToBytes(value: string): Uint8Array {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
 
 export type UseYjsMonacoResult = {
   ytext: Y.Text | null;
@@ -28,29 +34,6 @@ export type UseYjsMonacoResult = {
   /** Call from Monaco `onMount` to attach y-monaco. No-op when inactive. */
   bindEditor: (editor: MonacoEditorNS.IStandaloneCodeEditor) => void;
 };
-
-function waitForProviderSynced(
-  provider: WebrtcProvider,
-  timeoutMs: number,
-): Promise<void> {
-  return new Promise((resolve) => {
-    let settled = false;
-    const finish = () => {
-      if (settled) return;
-      settled = true;
-      provider.off("synced", onSynced);
-      window.clearTimeout(timer);
-      resolve();
-    };
-
-    const onSynced = (event: { synced: boolean }) => {
-      if (event.synced) finish();
-    };
-
-    provider.on("synced", onSynced);
-    const timer = window.setTimeout(finish, timeoutMs);
-  });
-}
 
 /**
  * Client-only Yjs room: HTTP sync (reliable) + WebRTC (best-effort).
@@ -176,25 +159,13 @@ export function useYjsMonaco(
         if (res.ok) {
           const data = (await res.json()) as { state?: string };
           if (typeof data.state === "string" && data.state) {
-            const Y = await import("yjs");
-            const binary = atob(data.state);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) {
-              bytes[i] = binary.charCodeAt(i);
-            }
-            Y.applyUpdate(room.doc, bytes, "http-sync");
+            Y.applyUpdate(room.doc, base64ToBytes(data.state), "http-sync");
           }
         }
       } catch {
-        // Fall through to seed / WebRTC
+        // Fall through to seed
       }
 
-      if (cancelled) {
-        destroyRoom(shareCode);
-        return;
-      }
-
-      await waitForProviderSynced(room.provider, SYNC_WAIT_MS);
       if (cancelled) {
         destroyRoom(shareCode);
         return;
@@ -202,6 +173,7 @@ export function useYjsMonaco(
 
       seedYTextIfEmpty(room.ytext, seedSnapshot);
 
+      // Become ready immediately — do not wait on flaky WebRTC signaling.
       stopHttp = startHttpYjsSync({
         shareCode,
         doc: room.doc,
@@ -215,7 +187,6 @@ export function useYjsMonaco(
       setAwareness(room.provider.awareness);
       setYtext(room.ytext);
       setReady(true);
-
       void attachBinding();
     })();
 

@@ -38,20 +38,35 @@ function errorMessage(data: unknown, fallback: string): string {
   return fallback;
 }
 
-export function useSnippetSession(initialShareCode?: string | null) {
+export function useSnippetSession(
+  initialShareCode?: string | null,
+  initialSnippet?: ShareSnippet | null,
+) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const codeFromQuery = searchParams.get("code");
   const codeFromUrl = (initialShareCode?.trim() || codeFromQuery || "").trim();
   const { user } = useAuth();
 
-  const [snippet, setSnippet] = useState<ShareSnippet | null>(null);
-  const [content, setContentState] = useState(DEFAULT_CONTENT);
-  const [title, setTitleState] = useState(DEFAULT_TITLE);
-  const [language, setLanguageState] =
-    useState<SnippetLanguage>(DEFAULT_LANGUAGE);
+  const seeded =
+    initialSnippet &&
+    (!codeFromUrl ||
+      initialSnippet.shareCode.toLowerCase() === codeFromUrl.toLowerCase());
+
+  const [snippet, setSnippet] = useState<ShareSnippet | null>(
+    seeded ? initialSnippet : null,
+  );
+  const [content, setContentState] = useState(
+    seeded ? initialSnippet.content : DEFAULT_CONTENT,
+  );
+  const [title, setTitleState] = useState(
+    seeded ? initialSnippet.title : DEFAULT_TITLE,
+  );
+  const [language, setLanguageState] = useState<SnippetLanguage>(
+    seeded ? initialSnippet.language : DEFAULT_LANGUAGE,
+  );
   const [status, setStatus] = useState<SnippetSessionStatus>(
-    codeFromUrl ? "loading" : "idle",
+    seeded ? "ready" : codeFromUrl ? "loading" : "idle",
   );
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -59,6 +74,14 @@ export function useSnippetSession(initialShareCode?: string | null) {
 
   useEffect(() => {
     if (!codeFromUrl) return;
+    // Already hydrated from the server — skip a redundant round-trip.
+    if (
+      seeded &&
+      initialSnippet &&
+      initialSnippet.shareCode.toLowerCase() === codeFromUrl.toLowerCase()
+    ) {
+      return;
+    }
     const shareKey = codeFromUrl;
 
     let cancelled = false;
@@ -98,7 +121,7 @@ export function useSnippetSession(initialShareCode?: string | null) {
     return () => {
       cancelled = true;
     };
-  }, [codeFromUrl]);
+  }, [codeFromUrl, seeded, initialSnippet]);
 
   const shareCode = snippet?.shareCode ?? null;
 
