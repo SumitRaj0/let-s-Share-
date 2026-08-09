@@ -76,16 +76,35 @@ export function CodeWorkspace({
   );
 
   const collabEnabled = Boolean(session.shareCode);
-  const collab = useYjsMonaco(session.shareCode, session.content);
+  const collab = useYjsMonaco(session.shareCode, session.content, {
+    id: presenceId,
+    name: displayName,
+    color: presenceColor,
+  });
   const consoleDoc =
     collabEnabled && collab.ready ? (collab.ytext?.doc ?? null) : null;
   const sharedConsole = useSharedConsole(consoleDoc);
-  useAwareness(collab.awareness, {
+  const awarenessPresence = useAwareness(collab.awareness, {
     id: presenceId,
     name: displayName,
     color: presenceColor,
     role: room.role ?? undefined,
   });
+
+  // Prefer WebRTC awareness peers; fall back to HTTP presence (cross-network).
+  const livePeers =
+    awarenessPresence.remotes.length > 0
+      ? awarenessPresence.remotes.map((u) => ({
+          id: u.id,
+          name: u.name,
+          color: u.color,
+        }))
+      : collab.httpPeers.map((p) => ({
+          id: p.id,
+          name: p.name,
+          color: p.color,
+        }));
+  const onlineCount = 1 + livePeers.length;
 
   const persistInFlight = useRef(false);
   const dirtyRef = useRef(session.dirty);
@@ -346,6 +365,39 @@ export function CodeWorkspace({
           >
             ShareCode
           </Link>
+          {collabEnabled && collab.ready ? (
+            <div
+              className="hidden items-center gap-1.5 sm:flex"
+              title={
+                livePeers.length > 0
+                  ? `Live with ${livePeers.map((p) => p.name).join(", ")}`
+                  : "Live session — waiting for others"
+              }
+            >
+              <span
+                className={`inline-block h-2 w-2 rounded-full ${
+                  livePeers.length > 0
+                    ? "bg-[#4ec9b0]"
+                    : "bg-[#858585]"
+                }`}
+                aria-hidden
+              />
+              <span className="text-[12px] font-medium text-[#858585]">
+                {livePeers.length > 0
+                  ? `Live · ${onlineCount}`
+                  : "Live"}
+              </span>
+              {livePeers.slice(0, 3).map((p) => (
+                <span
+                  key={p.id}
+                  className="inline-flex h-5 max-w-[4.5rem] items-center truncate rounded px-1.5 text-[10px] font-semibold text-[#1e1e1e]"
+                  style={{ backgroundColor: p.color }}
+                >
+                  {p.name}
+                </span>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">

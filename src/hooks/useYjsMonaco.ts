@@ -10,9 +10,11 @@ import {
   getOrCreateRoom,
   seedYTextIfEmpty,
 } from "@/lib/collab/doc";
+import { startHttpYjsSync } from "@/lib/collab/http-sync";
+import type { CollabPeer } from "@/lib/collab/types";
 
-/** Wait for peer state before seeding from the API snapshot. */
-const SYNC_WAIT_MS = 800;
+/** Wait briefly for WebRTC/BroadcastChannel before seeding from API. */
+const SYNC_WAIT_MS = 500;
 
 export type UseYjsMonacoResult = {
   ytext: Y.Text | null;
@@ -20,6 +22,8 @@ export type UseYjsMonacoResult = {
   /** Pass to Presence agent for live cursors / names. */
   awareness: Awareness | null;
   ready: boolean;
+  /** Peers discovered via reliable HTTP sync (excludes self). */
+  httpPeers: CollabPeer[];
   destroy: () => void;
   /** Call from Monaco `onMount` to attach y-monaco. No-op when inactive. */
   bindEditor: (editor: MonacoEditorNS.IStandaloneCodeEditor) => void;
@@ -49,20 +53,24 @@ function waitForProviderSynced(
 }
 
 /**
- * Client-only Yjs + y-webrtc + y-monaco binding for a share room.
- * When `shareCode` is null, stays inactive (local Monaco only).
+ * Client-only Yjs room: HTTP sync (reliable) + WebRTC (best-effort).
  */
 export function useYjsMonaco(
   shareCode: string | null,
   initialContent: string,
+  peer?: { id: string; name: string; color: string } | null,
 ): UseYjsMonacoResult {
   const [ready, setReady] = useState(false);
   const [ytext, setYtext] = useState<Y.Text | null>(null);
   const [provider, setProvider] = useState<WebrtcProvider | null>(null);
   const [awareness, setAwareness] = useState<Awareness | null>(null);
+  const [httpPeers, setHttpPeers] = useState<CollabPeer[]>([]);
 
   const initialContentRef = useRef(initialContent);
   initialContentRef.current = initialContent;
+
+  const peerRef = useRef(peer);
+  peerRef.current = peer;
 
   const bindingRef = useRef<{ destroy: () => void } | null>(null);
   const editorRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
@@ -87,8 +95,6 @@ export function useYjsMonaco(
 
     clearBinding();
 
-    // Seed Y BEFORE MonacoBinding — the binding constructor does
-    // `monacoModel.setValue(ytext)` and would wipe the editor if Y is empty.
     if (text.length === 0) {
       const seed = model.getValue() || initialContentRef.current;
       if (seed) {
@@ -100,7 +106,6 @@ export function useYjsMonaco(
     if (editorRef.current !== editor) return;
     if (ytextRef.current !== text) return;
     if (!shareCodeRef.current) return;
-    // Model may have been swapped while we awaited the import.
     if (editor.getModel() !== model) {
       void attachBinding();
       return;
@@ -128,6 +133,7 @@ export function useYjsMonaco(
     setYtext(null);
     setProvider(null);
     setAwareness(null);
+    setHttpPeers([]);
     setReady(false);
   }, [clearBinding]);
 
@@ -140,17 +146,49 @@ export function useYjsMonaco(
       setYtext(null);
       setProvider(null);
       setAwareness(null);
+      setHttpPeers([]);
       setReady(false);
       return;
     }
 
     let cancelled = false;
-    // Capture before any async gap so a later empty Y→React sync cannot
-    // poison the seed with "".
+    let stopHttp: (() => void) | null = null;
     const seedSnapshot = initialContentRef.current;
+    const localPeer = peerRef.current ?? {
+      id: "guest",
+      name: "Guest",
+      color: "#4ec9b0",
+    };
 
     void (async () => {
       const room = await getOrCreateRoom(shareCode);
+      if (cancelled) {
+        destroyRoom(shareCode);
+        return;
+      }
+
+      // Pull server state first so joiners get live code without WebRTC.
+      try {
+        const res = await fetch(
+          `/api/rooms/${encodeURIComponent(shareCode)}/collab`,
+          { cache: "no-store" },
+        );
+        if (res.ok) {
+          const data = (await res.json()) as { state?: string };
+          if (typeof data.state === "string" && data.state) {
+            const Y = await import("yjs");
+            const binary = atob(data.state);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+              bytes[i] = binary.charCodeAt(i);
+            }
+            Y.applyUpdate(room.doc, bytes, "http-sync");
+          }
+        }
+      } catch {
+        // Fall through to seed / WebRTC
+      }
+
       if (cancelled) {
         destroyRoom(shareCode);
         return;
@@ -162,8 +200,14 @@ export function useYjsMonaco(
         return;
       }
 
-      // Prefer peer content; otherwise restore the API/session snapshot.
       seedYTextIfEmpty(room.ytext, seedSnapshot);
+
+      stopHttp = startHttpYjsSync({
+        shareCode,
+        doc: room.doc,
+        peer: localPeer,
+        onPeers: setHttpPeers,
+      });
 
       providerRef.current = room.provider;
       ytextRef.current = room.ytext;
@@ -177,6 +221,7 @@ export function useYjsMonaco(
 
     return () => {
       cancelled = true;
+      stopHttp?.();
       clearBinding();
       destroyRoom(shareCode);
       ytextRef.current = null;
@@ -184,6 +229,7 @@ export function useYjsMonaco(
       setYtext(null);
       setProvider(null);
       setAwareness(null);
+      setHttpPeers([]);
       setReady(false);
     };
   }, [shareCode, clearBinding, attachBinding]);
@@ -191,7 +237,6 @@ export function useYjsMonaco(
   const bindEditor = useCallback(
     (editor: MonacoEditorNS.IStandaloneCodeEditor) => {
       editorRef.current = editor;
-      // If Monaco swaps models (language change), re-attach the binding.
       editor.onDidChangeModel(() => {
         void attachBinding();
       });
@@ -205,6 +250,7 @@ export function useYjsMonaco(
     provider,
     awareness,
     ready,
+    httpPeers,
     destroy,
     bindEditor,
   };

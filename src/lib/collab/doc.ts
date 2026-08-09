@@ -5,6 +5,12 @@ import type { WebrtcProvider } from "y-webrtc";
 
 const TEXT_KEY = "content";
 
+/** Prefer BroadcastChannel + optional signaling; public servers are flaky. */
+const SIGNALING = [
+  "wss://y-webrtc-eu.fly.dev",
+  "wss://signaling.yjs.dev",
+];
+
 export function roomNameForShareCode(shareCode: string): string {
   return `letsshare:${shareCode}`;
 }
@@ -22,6 +28,8 @@ const rooms = new Map<string, CollabRoom>();
  * Create or reuse a Y.Doc + WebrtcProvider for a share room.
  * Room id is the shareCode; provider room name is `letsshare:{shareCode}`.
  * Dynamic-imports yjs / y-webrtc so they never load on the server.
+ *
+ * HTTP sync (Turso) is the reliable cross-device path — WebRTC is best-effort.
  */
 export async function getOrCreateRoom(shareCode: string): Promise<CollabRoom> {
   const roomName = roomNameForShareCode(shareCode);
@@ -33,7 +41,11 @@ export async function getOrCreateRoom(shareCode: string): Promise<CollabRoom> {
 
   const doc = new Y.Doc();
   const ytext = doc.getText(TEXT_KEY);
-  const provider = new WebrtcProvider(roomName, doc);
+  const provider = new WebrtcProvider(roomName, doc, {
+    signaling: SIGNALING,
+    // Same-browser tabs sync via BroadcastChannel; still allow WebRTC peers.
+    filterBcConns: false,
+  });
 
   const room: CollabRoom = { doc, provider, ytext, roomName };
   rooms.set(roomName, room);

@@ -1,6 +1,6 @@
 import type { Client } from "@libsql/client";
 
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 /**
  * Turso remote rejects `PRAGMA user_version = N` (HTTP 400), so version is
@@ -106,6 +106,18 @@ export async function migrate(db: Client): Promise<void> {
     } catch {
       // Column may already exist on reused DBs.
     }
+    await setSchemaVersion(db, 3);
+  }
+
+  if ((await getSchemaVersion(db)) < 4) {
+    await db.executeMultiple(`
+      CREATE TABLE IF NOT EXISTS room_collab (
+        share_code TEXT PRIMARY KEY NOT NULL COLLATE NOCASE,
+        yjs_state TEXT NOT NULL DEFAULT '',
+        peers_json TEXT NOT NULL DEFAULT '[]',
+        updated_at TEXT NOT NULL
+      );
+    `);
     await setSchemaVersion(db, SCHEMA_VERSION);
   }
 }
