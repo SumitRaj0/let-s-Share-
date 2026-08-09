@@ -11,7 +11,8 @@ import {
   seedYTextIfEmpty,
 } from "@/lib/collab/doc";
 
-const SEED_FALLBACK_MS = 600;
+/** Wait for peer state before seeding from the API snapshot. */
+const SYNC_WAIT_MS = 800;
 
 export type UseYjsMonacoResult = {
   ytext: Y.Text | null;
@@ -23,6 +24,35 @@ export type UseYjsMonacoResult = {
   /** Call from Monaco `onMount` to attach y-monaco. No-op when inactive. */
   bindEditor: (editor: MonacoEditorNS.IStandaloneCodeEditor) => void;
 };
+
+function waitForProviderSynced(
+  provider: WebrtcProvider,
+  timeoutMs: number,
+): Promise<void> {
+  return new Promise((resolve) => {
+    // y-webrtc may already be synced when joining an existing room.
+    if (provider.synced) {
+      resolve();
+      return;
+    }
+
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      provider.off("synced", onSynced);
+      window.clearTimeout(timer);
+      resolve();
+    };
+
+    const onSynced = (event: { synced: boolean }) => {
+      if (event.synced) finish();
+    };
+
+    provider.on("synced", onSynced);
+    const timer = window.setTimeout(finish, timeoutMs);
+  });
+}
 
 /**
  * Client-only Yjs + y-webrtc + y-monaco binding for a share room.
@@ -65,9 +95,8 @@ export function useYjsMonaco(
 
     // Seed Y BEFORE MonacoBinding — the binding constructor does
     // `monacoModel.setValue(ytext)` and would wipe the editor if Y is empty.
-    const monacoValue = model.getValue();
     if (text.length === 0) {
-      const seed = monacoValue || initialContentRef.current;
+      const seed = model.getValue() || initialContentRef.current;
       if (seed) {
         seedYTextIfEmpty(text, seed);
       }
@@ -122,9 +151,9 @@ export function useYjsMonaco(
     }
 
     let cancelled = false;
-    let seedTimer: number | undefined;
-    let providerForCleanup: WebrtcProvider | null = null;
-    let onSynced: ((event: { synced: boolean }) => void) | null = null;
+    // Capture before any async gap so a later empty Y→React sync cannot
+    // poison the seed with "".
+    const seedSnapshot = initialContentRef.current;
 
     void (async () => {
       const room = await getOrCreateRoom(shareCode);
@@ -133,36 +162,27 @@ export function useYjsMonaco(
         return;
       }
 
-      providerForCleanup = room.provider;
-      ytextRef.current = room.ytext;
+      await waitForProviderSynced(room.provider, SYNC_WAIT_MS);
+      if (cancelled) {
+        destroyRoom(shareCode);
+        return;
+      }
+
+      // Prefer peer content; otherwise restore the API/session snapshot.
+      seedYTextIfEmpty(room.ytext, seedSnapshot);
+
       providerRef.current = room.provider;
-      setYtext(room.ytext);
+      ytextRef.current = room.ytext;
       setProvider(room.provider);
       setAwareness(room.provider.awareness);
+      setYtext(room.ytext);
       setReady(true);
-
-      let seeded = false;
-      const trySeed = () => {
-        if (seeded) return;
-        seeded = true;
-        seedYTextIfEmpty(room.ytext, initialContentRef.current);
-      };
-
-      onSynced = ({ synced }: { synced: boolean }) => {
-        if (synced) trySeed();
-      };
-      room.provider.on("synced", onSynced);
-      seedTimer = window.setTimeout(trySeed, SEED_FALLBACK_MS);
 
       void attachBinding();
     })();
 
     return () => {
       cancelled = true;
-      if (seedTimer != null) window.clearTimeout(seedTimer);
-      if (providerForCleanup && onSynced) {
-        providerForCleanup.off("synced", onSynced);
-      }
       clearBinding();
       destroyRoom(shareCode);
       ytextRef.current = null;

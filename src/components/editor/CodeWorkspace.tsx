@@ -158,12 +158,17 @@ export function CodeWorkspace({
     room.role !== "viewer";
 
   useEffect(() => {
-    if (!collabEnabled || !collab.ytext) return;
+    // Wait until seed/sync finished — exposing empty Y early used to wipe the
+    // API snapshot and leave scan devices with a blank Monaco.
+    if (!collabEnabled || !collab.ready || !collab.ytext) return;
     const ytext = collab.ytext;
     let timer: number | null = null;
 
     const syncFromYjs = () => {
-      contentRef.current = ytext.toString();
+      const next = ytext.toString();
+      // Never clobber a loaded snippet with an empty Y doc.
+      if (next.length === 0 && contentRef.current.length > 0) return;
+      contentRef.current = next;
       if (timer != null) window.clearTimeout(timer);
       // Debounce React updates — Yjs already drives Monaco via MonacoBinding.
       timer = window.setTimeout(() => {
@@ -178,7 +183,7 @@ export function CodeWorkspace({
       ytext.unobserve(syncFromYjs);
       if (timer != null) window.clearTimeout(timer);
     };
-  }, [collabEnabled, collab.ytext, session.setContent]);
+  }, [collabEnabled, collab.ready, collab.ytext, session.setContent]);
 
   const persistContent = useCallback(async () => {
     if (!canPersist) return;
@@ -453,12 +458,20 @@ export function CodeWorkspace({
             flexBasis: 0,
           }}
         >
-          {session.status === "loading" ? (
+          {session.status === "loading" ||
+          (collabEnabled && !collab.ready) ? (
             <div className="flex flex-1 items-center justify-center text-[15px] text-[#858585]">
-              Loading shared snippet…
+              {session.status === "loading"
+                ? "Loading shared snippet…"
+                : "Connecting live session…"}
             </div>
           ) : (
             <MonacoCodeEditor
+              key={
+                collabEnabled
+                  ? `collab-${session.shareCode}`
+                  : "local-editor"
+              }
               language={session.language}
               value={session.content}
               onChange={handleEditorChange}

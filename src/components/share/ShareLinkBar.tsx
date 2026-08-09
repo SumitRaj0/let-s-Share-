@@ -52,9 +52,14 @@ export function ShareLinkBar({
   const dark = variant === "dark";
 
   useEffect(() => {
-    const absolute = `${window.location.origin}${relativePath}`;
-    setAbsoluteUrl(absolute);
-    setLocalOnly(isLocalOnlyOrigin(window.location.origin));
+    const site = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
+    const origin = window.location.origin;
+    // Prefer public site URL for QR when developing on localhost so phones
+    // can open the deployed share instead of an unreachable localhost link.
+    const base =
+      isLocalOnlyOrigin(origin) && site.startsWith("http") ? site : origin;
+    setAbsoluteUrl(`${base}${relativePath}`);
+    setLocalOnly(isLocalOnlyOrigin(base));
   }, [relativePath]);
 
   useEffect(() => {
